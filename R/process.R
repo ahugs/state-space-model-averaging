@@ -98,12 +98,9 @@ IProcess <- setRefClass("IProcess",
            }
            return(list(I=I))
          },
+         # TODO: Implement
          generate_from_params = function(N) {
-           I = rep(NA, N + 1); I[1] = I_0
-           for(i in 1:N){
-             I[i+1] = (1 + y[i])*I[i]
-           }
-           return(list(I=I))
+           stop("Function generate_from_params must be implemented")
          }
        )
 )
