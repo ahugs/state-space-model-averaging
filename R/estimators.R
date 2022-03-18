@@ -1,4 +1,5 @@
 library(bsts)
+library(dlm)
 library(parallel)
 
 BaseEstimator <- setRefClass("BaseEstimator",
@@ -49,12 +50,41 @@ BSTSEstimator <- setRefClass("BSTSEstimator",
 
 DLMEstimator <- setRefClass("DLMEstimator",
      contains = "BaseEstimator",
-     #TODO: Implement 
      methods = list (
        fit_single_frequency = function(freq, y, lags) {
-         stop("Function 'fit_single_frequency' must be implemented")
-       }
-     )
+         N = length(y)
+         dlm_models = list()
+         dlm_x = rep(NA, N)
+         
+         tryCatch(
+           for(i in 1:freq){
+             y_sub = ts(y[seq(i, N, freq)])
+             
+             model <- dlmMLE(y=y_sub,parm=c(rep(0, lags), 0.5^2, 0.5^2),
+                             build=function(parm) dlmModARMA(ar=parm[1], sigma2=parm[2], dV=parm[3]))
+             if(model$convergence != 0) {
+               model <- dlmMLE(y=y_sub,parm=c(rep(0, lags), 0.5^2, 0.5^2), method='SANN',
+                              build=function(parm) dlmModARMA(ar=parm[1], sigma2=parm[2], dV=parm[3]))
+             }
+             if(model$convergence != 0){
+               stop("Failed to converge")
+             }
+             dlm_models[[i]] = model
+             states <- dlmSmooth(y=y_sub, mod=dlmModARMA(ar=model$par[1],
+                                                         sigma2=model$par[2],
+                                                         dV=model$par[3]))$s
+             if (dim(data.frame(states))[2] > 1) {
+               states = states[-1,1]
+             } else {
+               states = states[-1]
+             }
+             dlm_x[seq(i, N, freq)] = states
+           },
+           error=function(e) {print(e)}
+         )
+         return(list(x=dlm_x, models=dlm_models))
+         }
+       )
 )
 
 StofferEstimator <- setRefClass("StofferEstimator",

@@ -44,6 +44,7 @@ Experiment <- setRefClass("Experiment",
      run = function(){
 
        for (i in seq_along(experiment_params)){
+         if(i %% 10 == 0){ print(glue("Completed {i}/{length(experiment_params)} experiments..."))}
           results = run_from_params(experiment_params[[i]])
           true_states[[i]] <<- results$true_states
           fitted_states[[i]] <<- results$fitted_states
