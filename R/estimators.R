@@ -61,18 +61,22 @@ DLMEstimator <- setRefClass("DLMEstimator",
              y_sub = ts(y[seq(i, N, freq)])
              
              model <- dlmMLE(y=y_sub,parm=c(rep(0, lags), 0.5^2, 0.5^2),
-                             build=function(parm) dlmModARMA(ar=parm[1], sigma2=parm[2], dV=parm[3]))
+                             build=function(parm) dlmModARMA(ar=parm[1:lags], 
+                                                             sigma2=parm[lags+1],
+                                                             dV=parm[lags+2]))
              if(model$convergence != 0) {
                model <- dlmMLE(y=y_sub,parm=c(rep(0, lags), 0.5^2, 0.5^2), method='SANN',
-                              build=function(parm) dlmModARMA(ar=parm[1], sigma2=parm[2], dV=parm[3]))
+                              build=function(parm) dlmModARMA(ar=parm[1:lags], 
+                                                              sigma2=parm[lags+1],
+                                                              dV=parm[lags+2]))
              }
              if(model$convergence != 0){
                stop("Failed to converge")
              }
              dlm_models[[i]] = model
-             states <- dlmSmooth(y=y_sub, mod=dlmModARMA(ar=model$par[1],
-                                                         sigma2=model$par[2],
-                                                         dV=model$par[3]))$s
+             states <- dlmSmooth(y=y_sub, mod=dlmModARMA(ar=model$par[1:lags],
+                                                         sigma2=model$par[lags+1],
+                                                         dV=model$par[lags+2]))$s
              if (dim(data.frame(states))[2] > 1) {
                states = states[-1,1]
              } else {
