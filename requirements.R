@@ -1,0 +1,8 @@
+install.packages("dyplr")
+install.packages("tidyr")
+install.packages("ggplot2")
+install.packages("glue")
+install.packages("bsts")
+install.packages("parallel")
+install.packages("purrr")
+install.packageS("dlm")
