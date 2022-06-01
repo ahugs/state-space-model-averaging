@@ -88,7 +88,7 @@ IProcess <- setRefClass("IProcess",
        ),
        methods = list(
          initialize = function(params) {
-           states = c("I")
+           states <<- c("I")
            I_0 <<- params[['I_0']]
          },
          generate_from_y = function(y) {

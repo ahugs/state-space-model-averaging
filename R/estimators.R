@@ -17,6 +17,11 @@ BaseEstimator <- setRefClass("BaseEstimator",
           },
           fit = function(y) {
            model_results = mclapply(freqs, FUN=function(freq) fit_single_frequency(freq=freq, y=y, lags), mc.cores=4)
+           for(model_result in model_results){
+             if(model_result[['success']] == 0) {
+               print(model_results[['e']])
+             }
+           }
            x <<- lapply(model_results, FUN=function(x) x[['x']])
            models <<- lapply(model_results, FUN=function(x) x[['models']])
           }
@@ -42,9 +47,9 @@ BSTSEstimator <- setRefClass("BSTSEstimator",
                burn = SuggestBurn(0.1, model)
                bsts_x[seq(i, N, freq)] = colMeans(model$state.contributions[-(1:burn),,])
              },
-             error=function(e) {print(e)}
+             error=function(e) {return(list(x=NA, models=NA, success=0, error=e))}
            )
-           return(list(x=bsts_x, models=bsts_models))
+           return(list(x=bsts_x, models=bsts_models, success=1, error=NA))
          }
        )
 )
@@ -57,6 +62,7 @@ DLMEstimator <- setRefClass("DLMEstimator",
          N = length(y)
          dlm_models = list()
          dlm_x = rep(NA, N)
+
          
          tryCatch(
            for(i in 1:freq){
@@ -86,16 +92,16 @@ DLMEstimator <- setRefClass("DLMEstimator",
              }
              dlm_x[seq(i, N, freq)] = states
            },
-           error=function(e) {print(e)}
+         error=function(e) {return(list(x=NA, models=NA, success=0, error=e))}
          )
-         return(list(x=dlm_x, models=dlm_models))
+         
+         return(list(x=dlm_x, models=dlm_models, success=1, error=NA))
          }
        )
 )
 
 StofferEstimator <- setRefClass("StofferEstimator",
     contains = "BaseEstimator",
-    #TODO: Implement 
     methods = list (
       fit_single_frequency = function(freq, y, lags) {
         N = length(y)
@@ -137,19 +143,19 @@ StofferEstimator <- setRefClass("StofferEstimator",
             
             stoffer_x[seq(i, N, freq)] = states
           },
-          error=function(e) {print(e)}
+          error=function(e) {return(list(x=NA, models=NA, success=0, error=e))}
         )
-        return(list(x=stoffer_x, models=stoffer_models))
+        return(list(x=stoffer_x, models=stoffer_models, success=1, error=NA))
       }
     )
 )
 
 
-NoModelEstimator <- setRefClass("DLMEstimator",
+NoModelEstimator <- setRefClass("NoModelEstimator",
     contains = "BaseEstimator",
     methods = list (
       fit_single_frequency = function(freq, y, lags) {
-        return(list(x=y, models=list()))
+        return(list(x=y, models=list(), success=1, error=NA))
       }
     )
 
